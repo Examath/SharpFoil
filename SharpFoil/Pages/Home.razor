@@ -1,0 +1,64 @@
+﻿@page "/"
+@using SharpFoil.Shared
+@using SharpFoil.Model
+
+<PageTitle>SharpFoil</PageTitle>
+
+<div class="container">
+    <div class="container-edit">
+        <h3><i>SharpFoil v0.1</i></h3>
+        <NavLink>About</NavLink>
+
+        <FluentDivider/>
+
+        <h4>Profile</h4>
+        <Importer @ref="ImporterRef"/>
+
+        @if (CurrentAnalysis != null) {
+            <p>Profile with @(CurrentAnalysis.SourceProfile.X.Length) points</p>
+        }
+        else {
+            <p title="An error may have occurred when loading the default profile.">Default profile loading...</p>
+        }
+
+        <h4>Transform Options</h4>
+
+        <FluentSlider Label="Number of Terms" Min="3" Max="11" Step="1">
+            <FluentSliderLabel Position="4">4</FluentSliderLabel>
+            <FluentSliderLabel Position="5">5</FluentSliderLabel>
+            <FluentSliderLabel Position="6">6</FluentSliderLabel>
+        </FluentSlider>
+
+        <h4>Equations</h4>
+
+        <FluentButton>Copy</FluentButton>
+    </div>
+    <div class="container-view">
+        <div style="background: blue; width: 100%; height: 100%;">            
+            @if (CurrentAnalysis != null) {
+                <ul>
+                @for (int i = 0; i < CurrentAnalysis.SourceProfile.X.Length; i++) {
+                    <li>@(CurrentAnalysis.SourceProfile.X[i]) @(CurrentAnalysis.SourceProfile.Y[i])</li>
+                }
+                </ul>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    Importer ImporterRef;
+    Analysis? CurrentAnalysis;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            CurrentAnalysis = await ImporterRef.GetDefaultAnalysis();
+            if (CurrentAnalysis != null) StateHasChanged();
+        }
+    }
+}
+        
+
+

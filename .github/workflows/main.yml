@@ -18,15 +18,15 @@ jobs:
       # uses GitHub's checkout action to checkout code from the main branch
     - uses: actions/checkout@v2
       
-      # sets up .NET SDK 5.0.x
-    - name: Setup .NET SDK 8.0.x
+      # sets up .NET SDK 9.0.x
+    - name: Setup .NET SDK 9.0.x
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: "8.0.x"
+        dotnet-version: "9.0.x"
         
       # publishes Blazor project to the release folder
     - name: Publish .NET Project
-      run: dotnet publish Client/SharpFoilClient.csproj -c Release -o release --nologo
+      run: dotnet publish SharpFoil/SharpFoil.csproj -c Release -o release --nologo
 
       # changes the base-tag in index.html from '/' to 'BlazorGitHubPagesDemo' to match GitHub Pages repository subdirectory
     - name: Change base-tag in index.html from / to SharpFoil

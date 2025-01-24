@@ -1,0 +1,12 @@
+﻿<div style="padding: 0.2em; border: 1px solid grey; border-radius: 0.5em;">
+	<h3>@Header</h3>
+	@ChildContent
+</div>
+
+@code {
+	[Parameter]
+	public string? Header { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+}

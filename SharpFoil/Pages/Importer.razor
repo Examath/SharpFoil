@@ -1,0 +1,55 @@
+﻿@using SharpFoil.Model
+@inject HttpClient Http
+
+<FluentButton>New Profile</FluentButton>
+
+@code {
+
+	public async Task<Analysis?> GetDefaultAnalysis()
+	{
+		string? file = await TryFetchString("defaultprofile.dat");
+		if (file != null) return TryCreateAnalysisFromFile(file);
+		else return null;
+	}
+
+	async Task<string?> TryFetchString(string uri)
+	{
+		try
+		{
+			string file = await Http.GetStringAsync(uri);
+			return file;
+		}
+		catch (UriFormatException)
+		{
+			throw;
+		}
+		catch (HttpRequestException)
+		{
+			throw;
+		}
+
+		return null;
+	}
+
+	Analysis? TryCreateAnalysisFromFile(string file)
+	{
+		PointProfile? pointProfile;
+		string name;
+
+		try
+		{
+			(pointProfile, name) = PointProfile.FromSeligDatFile(file);
+		}
+		catch (Exception)
+		{
+
+			throw;
+		}
+
+		if (pointProfile != null)
+		{
+			return new Analysis(pointProfile, name);
+		}
+		else return null;
+	}
+}
