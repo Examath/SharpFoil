@@ -5,6 +5,10 @@ VisualStudioVersion = 17.0.32126.317
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpFoilClient", "Client\SharpFoilClient.csproj", "{A789CAE2-99A1-4D0D-B492-6FB0A727E94D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpFoil", "SharpFoil\SharpFoil.csproj", "{E5CFB710-B159-4B88-9A06-CBA59BD06998}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SfPlayground", "SfPlayground\SfPlayground.csproj", "{6273B18F-AA2F-4A03-8A6F-1B69E433C0B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{A789CAE2-99A1-4D0D-B492-6FB0A727E94D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A789CAE2-99A1-4D0D-B492-6FB0A727E94D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A789CAE2-99A1-4D0D-B492-6FB0A727E94D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5CFB710-B159-4B88-9A06-CBA59BD06998}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5CFB710-B159-4B88-9A06-CBA59BD06998}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5CFB710-B159-4B88-9A06-CBA59BD06998}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5CFB710-B159-4B88-9A06-CBA59BD06998}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6273B18F-AA2F-4A03-8A6F-1B69E433C0B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6273B18F-AA2F-4A03-8A6F-1B69E433C0B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6273B18F-AA2F-4A03-8A6F-1B69E433C0B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6273B18F-AA2F-4A03-8A6F-1B69E433C0B9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

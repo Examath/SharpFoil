@@ -1,9 +1,54 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Components
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Test</PageTitle>
 
 <h1>Hello, world!</h1>
 
-Welcome to your new app.
+Test/Risk Mitigation for the development of Blazor WASM apps. <br/>
+Demonstration for Project <i>SharpFoil</i>
 
-P4 - 18808
+<h3>Sum of Two Numbers</h3>
+
+<div>
+    <label for="firstNumber">First Number:</label>
+    <input type="number" @bind="FirstNumber" id="firstNumber" />
+</div>
+<div>
+    <label for="secondNumber">Second Number:</label>
+    <input type="number" @bind="SecondNumber" id="secondNumber" />
+</div>
+<div>
+    <p>Sum: @sum</p>
+</div>
+
+@code {
+    private int firstNumber;
+    private int secondNumber;
+    private int sum;
+
+    private int FirstNumber
+    {
+        get => firstNumber;
+        set
+        {
+            firstNumber = value;
+            CalculateSum();
+        }
+    }
+
+    private int SecondNumber
+    {
+        get => secondNumber;
+        set
+        {
+            secondNumber = value;
+            CalculateSum();
+        }
+    }
+
+    private void CalculateSum()
+    {
+        sum = firstNumber + secondNumber;
+    }
+}
