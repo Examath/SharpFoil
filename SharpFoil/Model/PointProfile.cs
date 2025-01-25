@@ -1,13 +1,47 @@
 ﻿namespace SharpFoil.Model
 {
+	/// <summary>
+	/// Represents a airfoil profile using a list of points
+	/// </summary>
 	public class PointProfile
 	{
-		public double[] X;
+		/// <summary>
+		/// Gets the coordinates in the longitudinal direction of the profile
+		/// </summary>
+		/// <remarks>
+		/// The points are ordered starting from trailing edge, 
+		/// along the upper surface to the leading edge 
+		/// and back around the lower surface to trailing edge.
+		/// </remarks>
+		public double[] X { get; private set; }
 
-		public double[] Y;
+		/// <summary>
+		/// Gets the coordinates in the vertical direction of the profile
+		/// </summary>
+		/// <remarks>
+		/// The points are ordered starting from trailing edge, 
+		/// along the upper surface to the leading edge 
+		/// and back around the lower surface to trailing edge.
+		/// </remarks>
+		public double[] Y { get; private set; }
 
-		int InflectionIndex;
+		/// <summary>
+		/// Gets the index of the leading edge (minimum x) point
+		/// </summary>
+		public int InflectionIndex { get; private set; }
 
+		/// <summary>
+		/// Creates an new PointProfile from coordinates
+		/// </summary>
+		/// <remarks>
+		/// Note: <paramref name="x"/> and <paramref name="y"/> must have the same length. 
+		/// They form pairs of cartesian coordinates starting from the trailing edge, 
+		/// along the upper surface to the leading edge,
+		/// and back around the lower surface to trailing edge.
+		/// </remarks>
+		/// <param name="x">An array of coordinates in the longitudinal direction</param>
+		/// <param name="y">An array of coordinates in the vertical direction</param>
+		/// <exception cref="ArgumentException"></exception>
 		public PointProfile(double[] x, double[] y)
 		{
 			if (x.Length == 0 || y.Length == 0)
@@ -37,6 +71,16 @@
 			}
 		}
 
+		/// <summary>
+		/// Creates a <see cref="PointProfile"/> from the provided Selig format data file
+		/// </summary>
+		/// <param name="file">The Selig format data file to interpret</param>
+		/// <returns>
+		/// A tuple with the generated <see cref="PointProfile"/> 
+		/// and the name or description of the profile.
+		/// </returns>
+		/// <exception cref="InvalidDataException"></exception>
+		/// <exception cref="NotImplementedException"></exception>
 		public static (PointProfile, string) FromSeligDatFile(string file)
 		{
 			// Lednicer/Selig rules (R*) from http://airfoiltools.com/airfoil/index
