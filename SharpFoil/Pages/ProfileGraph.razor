@@ -6,10 +6,8 @@
 </div>
 
 @code {
-    [Parameter]
-    public List<StyledPointProfile> Profiles { get; set; }
-
-    //bool IsFirstRendered = false;
+    // [Parameter]
+    // public List<StyledPointProfile> Profiles { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -19,8 +17,27 @@
         }
     }
 
-    protected override async Task OnParametersSetAsync()
+    // protected override async Task OnParametersSetAsync()
+    // {
+    //     await JSRuntime.InvokeVoidAsync("profileCanvas.set", Profiles);
+    // }
+
+    public async Task Set(Analysis? current, List<Analysis>? other)
     {
-        await JSRuntime.InvokeVoidAsync("profileCanvas.set", Profiles);
+        List<StyledPointProfile> profiles = new();
+
+        if (other != null) foreach (Analysis analysis in other)
+        {
+            if (analysis == current || !analysis.IsVisible) continue;
+            if (analysis.CurveProfile != null) profiles.Add(new(analysis.CurveProfile.DisplayProfile, analysis.Color));
+        }
+
+        if (current != null)
+        {
+            if (current.CurveProfile != null) profiles.Add(new(current.CurveProfile.DisplayProfile, current.Color, lineWidth: 2));
+            profiles.Add(new(current.SourceProfile, current.Color, usePoints: true));
+        }
+
+        await JSRuntime.InvokeVoidAsync("profileCanvas.set", profiles);
     }
 }

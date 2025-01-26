@@ -1,62 +1,145 @@
 ﻿@page "/"
 @using SharpFoil.Shared
 @using SharpFoil.Model
+@inject IDialogService DialogService
 
 <PageTitle>SharpFoil</PageTitle>
 
 <div class="container">
-    <div class="container-edit">
-        <h3><i>SharpFoil v0.2</i></h3>
-        <NavLink>Currently In Development</NavLink>
+	<div class="container-edit">
+        <div style="position: sticky;">
+		    <h3><i>SharpFoil</i></h3>
+            <div style="position: absolute; right: 0.5rem; top: 0;">
+                <code>v0.4</code>
+                <a href="https://github.com/Examath/SharpFoil" target="_blank">Source Code</a>
+			</div>
+		</div>
 
-        <FluentDivider/>
+        <h5>Profile</h5>
+        <FluentListbox @ref="ProfileListRef" 
+        Items="@Analyses" 
+        SelectedOptionChanged="EventCallback.Factory.Create<Analysis>(this, OnAnalysisChanged)">
+            <OptionTemplate>
+                <FluentCheckbox @bind-Value="@context.IsVisible"/>
+                <input type="color" @bind-value="@context.Color"/>
+                <FluentTextField @bind-Value="@context.Name"/>
+            </OptionTemplate>
+        </FluentListbox>
 
-        <h4>Profile</h4>
-        <Importer @ref="ImporterRef"/>
+        <FluentStack Style="margin: 0.25rem 0 0 0">
+            <FluentButton Appearance="Appearance.Accent" OnClick="@NewProfile">New Profile</FluentButton>
+            <FluentButton Disabled>Duplicate</FluentButton>
+            <FluentButton OnClick="@DeleteSelectedAnalysis" Disabled="@CanNotDelete">Delete</FluentButton>
+        </FluentStack>
 
         @if (CurrentAnalysis != null) {
-            <p>Profile with @(CurrentAnalysis.SourceProfile.X.Length) points</p>
+
+            <h5>Transform Options</h5>
+
+            <p style="color: @(CurrentAnalysis.Color);">Profile with @(CurrentAnalysis.SourceProfile.X.Length) points</p>
+
+            <FluentSlider Label="Number of Terms" Min="3" Max="12" Step="1" @bind-Value="@CurrentAnalysis.Order">
+                <FluentSliderLabel Position="3">3</FluentSliderLabel>
+                <FluentSliderLabel Position="4">4</FluentSliderLabel>
+                <FluentSliderLabel Position="5">5</FluentSliderLabel>
+                <FluentSliderLabel Position="6">6</FluentSliderLabel>
+                <FluentSliderLabel Position="12">12</FluentSliderLabel>
+            </FluentSlider>
+
+            @if (CurrentAnalysis != null && CurrentAnalysis.CurveProfile != null)
+            {
+                <Exporter CurveProfile="@CurrentAnalysis.CurveProfile" />
+            }
+            else {
+                <p>Huh, curve profile is null</p>
+            }
         }
         else {
             <p title="An error may have occurred when loading the default profile.">Default profile loading...</p>
         }
 
-        <h4>Transform Options</h4>
-
-        <FluentSlider Label="Number of Terms" Min="3" Max="11" Step="1">
-            <FluentSliderLabel Position="4">4</FluentSliderLabel>
-            <FluentSliderLabel Position="5">5</FluentSliderLabel>
-            <FluentSliderLabel Position="6">6</FluentSliderLabel>
-        </FluentSlider>
-
-        <h4>Equations</h4>
-
-        <FluentButton>Copy</FluentButton>
     </div>
     <div class="container-view">
-        <ProfileGraph Profiles="@DisplayProfiles" />
+        <ProfileGraph @ref="ProfileGraphRef" />
     </div>
 </div>
 
 @code {
-    Importer ImporterRef;
+    ProfileGraph ProfileGraphRef;
+    FluentListbox<Analysis> ProfileListRef;
+
     Analysis? CurrentAnalysis;
-    List<StyledPointProfile> DisplayProfiles = [];
+    List<Analysis> Analyses = [];
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            CurrentAnalysis = await ImporterRef.GetDefaultAnalysis();
-            var temp = new StyledPointProfile(CurrentAnalysis.SourceProfile, "#ff00ff", true);
-            temp.Y[4] = 0;
-            temp.Y[6] = 0;
-            DisplayProfiles = new() 
-            { 
-                new(CurrentAnalysis.SourceProfile, "#00ffff"),
-                temp,
-            };
-            if (CurrentAnalysis != null) StateHasChanged();
+            Analysis analysis = Analysis.GenerateDefault();
+            if (analysis != null) 
+            {
+                await AddNewAnalysis(analysis);
+            }
+            else {
+                Console.WriteLine("CS-H001 CurrentAnalysis Null on Home.razor OnAfterRenderAsync");
+            }
+        }
+    }
+
+    protected async void Analysis_StateChanged(object sender, EventArgs e) 
+    {
+        await ProfileGraphRef.Set(CurrentAnalysis, Analyses);
+    }
+
+    private async Task OnAnalysisChanged(Analysis analysis)
+    {
+        if (CurrentAnalysis != analysis)
+        {
+            Console.WriteLine($"Analysis changing to: {analysis} from {CurrentAnalysis}");
+            CurrentAnalysis = analysis;
+            await ProfileGraphRef.Set(CurrentAnalysis, Analyses);
+            StateHasChanged();
+        }
+    }
+
+    private async Task NewProfile() {
+        var dialog = await DialogService.ShowDialogAsync<Importer>(null, new());
+        var result = await dialog.Result;
+        if (!result.Cancelled && result.Data is Analysis analysis) await AddNewAnalysis(analysis);
+    }
+
+    private async Task AddNewAnalysis(Analysis analysis)
+    {
+        // Add and select
+        CurrentAnalysis = analysis;
+        Analyses.Add(CurrentAnalysis);
+
+        // Subscribe
+        CurrentAnalysis.StateChanged += Analysis_StateChanged;
+
+        // Update
+        ProfileListRef.SelectedOption = CurrentAnalysis;
+        await ProfileGraphRef.Set(CurrentAnalysis, Analyses);
+        StateHasChanged();
+    }
+
+    private bool CanNotDelete => Analyses.Count <= 1;
+
+    private async Task DeleteSelectedAnalysis() 
+    {
+        if (CurrentAnalysis != null && !CanNotDelete)
+        {
+            // Unsubscribe
+            CurrentAnalysis.StateChanged -= Analysis_StateChanged;
+
+            // Unset
+            Analyses.Remove(CurrentAnalysis);
+            CurrentAnalysis = Analyses[0];
+
+            // Update
+            ProfileListRef.SelectedOption = CurrentAnalysis;
+            await ProfileGraphRef.Set(CurrentAnalysis, Analyses);
+            StateHasChanged();
         }
     }
 }
