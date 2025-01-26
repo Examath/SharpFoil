@@ -6,58 +6,81 @@
 
 <div class="container">
     <div class="container-edit">
-        <h3><i>SharpFoil v0.2</i></h3>
+        <h3><i>SharpFoil v0.3</i></h3>
         <NavLink>Currently In Development</NavLink>
 
-        <FluentDivider/>
-
         <h4>Profile</h4>
-        <Importer @ref="ImporterRef"/>
+        <FluentListbox Style="margin: 0 0 0.25rem 0" Items="@Analyses" @bind-SelectedOption="@CurrentAnalysis">
+            <OptionTemplate>
+                <input type="color" @bind-value="@context.Color"/>
+                <FluentTextField @bind-Value="@context.Name"/>
+            </OptionTemplate>
+        </FluentListbox>
+
+        <FluentStack>
+            <Importer @ref="ImporterRef" />
+            <FluentButton Disabled>Duplicate</FluentButton>
+            <FluentButton Disabled>Delete</FluentButton>
+        </FluentStack>
 
         @if (CurrentAnalysis != null) {
-            <p>Profile with @(CurrentAnalysis.SourceProfile.X.Length) points</p>
+
+			<h4>Transform Options</h4>
+
+			<p>Profile with @(CurrentAnalysis.SourceProfile.X.Length) points</p>
+
+            <FluentSlider Label="Number of Terms" Min="3" Max="11" Step="1" @bind-Value="@CurrentAnalysis.Order">
+                <FluentSliderLabel Position="4">4</FluentSliderLabel>
+                <FluentSliderLabel Position="5">5</FluentSliderLabel>
+                <FluentSliderLabel Position="6">6</FluentSliderLabel>
+            </FluentSlider>
+
+            @if (CurrentAnalysis != null && CurrentAnalysis.CurveProfile != null)
+            {
+                <Exporter CurveProfile="@CurrentAnalysis.CurveProfile" />
+            }
+            else {
+                <p>Huh, curve profile is null</p>
+            }
         }
         else {
             <p title="An error may have occurred when loading the default profile.">Default profile loading...</p>
         }
 
-        <h4>Transform Options</h4>
-
-        <FluentSlider Label="Number of Terms" Min="3" Max="11" Step="1">
-            <FluentSliderLabel Position="4">4</FluentSliderLabel>
-            <FluentSliderLabel Position="5">5</FluentSliderLabel>
-            <FluentSliderLabel Position="6">6</FluentSliderLabel>
-        </FluentSlider>
-
-        <h4>Equations</h4>
-
-        <FluentButton>Copy</FluentButton>
     </div>
     <div class="container-view">
-        <ProfileGraph Profiles="@DisplayProfiles" />
+        <ProfileGraph @ref="ProfileGraphRef" />
     </div>
 </div>
 
 @code {
     Importer ImporterRef;
+    ProfileGraph ProfileGraphRef;
+
     Analysis? CurrentAnalysis;
-    List<StyledPointProfile> DisplayProfiles = [];
+    List<Analysis> Analyses = [];
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             CurrentAnalysis = await ImporterRef.GetDefaultAnalysis();
-            var temp = new StyledPointProfile(CurrentAnalysis.SourceProfile, "#ff00ff", true);
-            temp.Y[4] = 0;
-            temp.Y[6] = 0;
-            DisplayProfiles = new() 
-            { 
-                new(CurrentAnalysis.SourceProfile, "#00ffff"),
-                temp,
-            };
-            if (CurrentAnalysis != null) StateHasChanged();
+
+            if (CurrentAnalysis != null) {
+                CurrentAnalysis.StateChanged += Analysis_StateChanged;
+                Analyses.Add(CurrentAnalysis);
+                await ProfileGraphRef.Set(CurrentAnalysis, null);
+                StateHasChanged();
+            }
+            else {
+                Console.WriteLine("CurrentAnalysis Null on Home.razor OnAfterRenderAsync");
+            }
         }
+    }
+
+    protected async void Analysis_StateChanged(object sender, EventArgs e) 
+    {
+        await ProfileGraphRef.Set(CurrentAnalysis, null);
     }
 }
         

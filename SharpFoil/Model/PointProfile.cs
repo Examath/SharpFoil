@@ -31,6 +31,11 @@
 		public int InflectionIndex { get; private set; }
 
 		/// <summary>
+		/// Gets the number of points defining this profile
+		/// </summary>
+		public int Length { get; private set; }
+
+		/// <summary>
 		/// Creates an new PointProfile from coordinates
 		/// </summary>
 		/// <remarks>
@@ -55,6 +60,7 @@
 
 			X = x;
 			Y = y;
+			Length = X.Length;
 			UpdateInflection();
 		}
 
@@ -62,13 +68,35 @@
 		{
 			InflectionIndex = 0;
 
-			for (int i = 0; i < X.Length; i++)
+			for (int i = 0; i < Length; i++)
 			{
 				if (X[i] < X[InflectionIndex])
 				{
 					InflectionIndex = i;
 				}
 			}
+		}
+
+		/// <summary>
+		/// Finds the square root of the <see cref="X"/> coordinates of the points,
+		/// where points on the upper surface are negative
+		/// </summary>
+		/// <returns>An array with the squared values</returns>
+		public double[] GetSquaredRootX()
+		{
+			double[] x2 = new double[Length];
+			for (int i = 0; i < X.Length; i++)
+			{
+				if (i <= InflectionIndex)
+				{
+					x2[i] = - Math.Sqrt(X[i]);
+				}
+				else
+				{
+					x2[i] = Math.Sqrt(X[i]);
+				}				
+			}
+			return x2;
 		}
 
 		/// <summary>

@@ -32,6 +32,8 @@ window.profileCanvas = {
     },
 
     draw: function () {
+        // Scaling tips & tricks: https://joshondesign.com/2023/04/15/canvas_scale_smooth and MDN
+
         // Null colase canvas context
         if (this.ctx == null) {
             console.warn(`Canvas #${this.targetId} not linked`);

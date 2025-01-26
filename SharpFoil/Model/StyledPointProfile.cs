@@ -23,7 +23,7 @@
 		/// <param name="color">The HTML color to draw the profile in</param>
 		/// <param name="usePoints">Whether to render points as markers, rather than lines</param>
 		public StyledPointProfile(PointProfile pointProfile, string color, bool usePoints = false) 
-			: base((double[])pointProfile.X.Clone(), (double[])pointProfile.Y.Clone())
+			: base(pointProfile.X, pointProfile.Y)
 		{
 			Color = color;
 			UsePoints = usePoints;

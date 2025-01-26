@@ -1,0 +1,56 @@
+﻿@using SharpFoil.Model
+@using System.Text
+
+<h4>Equations</h4>
+
+<table>
+	<tr>
+		<td>
+			X(t)
+		</td>
+		<td>
+			<code>@GenerateEquation()</code>
+		</td>
+		<td>
+			<FluentButton Disabled>Copy</FluentButton>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Y(t)
+		</td>
+		<td>
+			<code>t^2</code>
+		</td>
+		<td>
+			<FluentButton Disabled>Copy</FluentButton>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			R<sup>2</sup>
+		</td>
+		<td>
+			<code>@CurveProfile.RSquared</code>
+		</td>
+	</tr>
+</table>
+<p>R-squared: </p>
+
+
+@code {
+	[Parameter]
+	public required CurveProfile CurveProfile { get; set; }
+
+	string GenerateEquation()
+	{
+		StringBuilder buffer = new($"{CurveProfile.Coefficients[0]}*t");
+
+		for (int i = 1; i < CurveProfile.Order; i++)
+		{
+			double c = CurveProfile.Coefficients[i];
+			buffer.Append($" {(c >= 0 ? '+' : '-')} {Math.Abs(c)}*t^{i + 1}");
+		}
+		return buffer.ToString();
+	}
+}
