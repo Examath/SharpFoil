@@ -1,55 +1,251 @@
 ﻿@using SharpFoil.Model
 @inject HttpClient Http
+@inject IMessageService MessageService
+@inject IJSRuntime JSRuntime
+@implements IDialogContentComponent<Analysis?>
+@using System.ComponentModel.DataAnnotations
 
-<FluentButton Appearance="Appearance.Accent">New Profile</FluentButton>
+@* Header *@
+<FluentDialogHeader ShowDismiss="true">
+	<FluentStack VerticalAlignment="VerticalAlignment.Center">
+		<FluentIcon Value="@(new Icons.Regular.Size24.New())" />
+		<FluentLabel Typo="Typography.PaneHeader">
+			Create a new Analysis
+		</FluentLabel>
+	</FluentStack>
+</FluentDialogHeader>
+
+@* Footer *@
+<FluentDialogFooter>
+	<FluentButton Appearance="Appearance.Neutral" OnClick="@CancelAsync">Cancel</FluentButton>
+</FluentDialogFooter>
+
+@* Body *@
+<FluentDialogBody>
+	<FluentMessageBarProvider Section="@IMPORTER_DIALOG_SECTION" MaxMessageCount="1" />
+
+	@* 	<h5>From URL:</h5>
+	<FluentTextField @bind-Value="@FetchUri">Name:</FluentTextField>
+	<FluentButton Appearance="Appearance.Accent" OnClick="@FetchFromUri">Fetch</FluentButton> *@
+
+	<h5>Upload File:</h5>
+	<FluentInputFile 
+	Id="my-file-uploader"
+	@ref="@FileInputRef"
+	Mode="InputFileMode.Stream"
+	MaximumFileSize="@(10*1024*1024)"
+	Accept=".txt, .dat"
+	OnFileUploaded="@OnFileUploadedAsync"
+	Style="height: 150px;">
+		<ChildContent>
+			<label for="my-file-uploader">
+				<FluentIcon Value="@(new @Icons.Regular.Size24.ArrowUpload())" />
+			</label>
+
+			<div>
+				Drag an airfoil data file here,
+				or <label for="my-file-uploader">browse</label>
+				<br />
+			</div>
+
+			<div>
+				Airfoil data must be in the 
+				<a href="https://m-selig.ae.illinois.edu/ads.html#:~:text=ones%20added%20by-,Selig,-are%20in%20an">Selig data format</a>
+			</div>
+		</ChildContent>
+	</FluentInputFile>
+
+	<h5>From Clipboard:</h5>
+	@if (FromClipboardAnalysis != null)
+	{
+		<FluentButton OnClick="@AddPasted">Add '@FromClipboardAnalysis.Name'</FluentButton>
+	}
+	else
+	{
+		<FluentButton OnClick="@Paste">Paste</FluentButton>
+	}
+
+</FluentDialogBody>
 
 @code {
+	// Dialog Methods
 
-	public async Task<Analysis?> GetDefaultAnalysis()
+	[Parameter]
+	public Analysis? Content { get; set; }
+
+	private readonly string IMPORTER_DIALOG_SECTION = "IMPORTER_DIALOG_SECTION";
+
+	protected override void OnInitialized()
 	{
-		string? file = await TryFetchString("defaultprofile.dat");
-		if (file != null) return TryCreateAnalysisFromFile(file);
-		else return null;
+		base.OnInitialized();
+		MessageService.Clear(IMPORTER_DIALOG_SECTION);
 	}
 
-	async Task<string?> TryFetchString(string uri)
+	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
-		try
+		// See if one can paste
+		if (firstRender)
 		{
-			string file = await Http.GetStringAsync(uri);
-			return file;
-		}
-		catch (UriFormatException)
-		{
-			throw;
-		}
-		catch (HttpRequestException)
-		{
-			throw;
-		}
+			try
+			{
+				string text = await JSRuntime.InvokeAsync<string>("clipboardPaste", timeout: TimeSpan.FromSeconds(1));
+				if (text == string.Empty) return;
+				(PointProfile pointProfile, string name) = PointProfile.FromSeligDatFile(text);
+				FromClipboardAnalysis = new Analysis(pointProfile, name);
+				StateHasChanged();
+			}
+			catch (OperationCanceledException)
+			{
 
-		return null;
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine($"CS-IM01 Automatic paste failed: Error message: " + e.Message);
+			}
+		}
 	}
 
-	Analysis? TryCreateAnalysisFromFile(string file)
+	[CascadingParameter]
+	public FluentDialog Dialog { get; set; } = default!;
+
+	private async Task CancelAsync()
+	{
+		await Dialog.CancelAsync();
+	}
+
+	// File Stream Import
+
+	private FluentInputFile FileInputRef;
+
+	private async Task OnFileUploadedAsync(FluentInputFileEventArgs file)
+	{
+		if (file.Stream != null)
+		{
+			using var streamReader = new StreamReader(file.Stream);
+			string text = await streamReader.ReadToEndAsync();
+			await TryCreateAnalysisFromText(text);
+		}
+		else 
+		{
+			Console.WriteLine("CS-IM02 File Import Stream Null");
+		}
+	}
+
+	// Clipboard
+	Analysis? FromClipboardAnalysis;
+
+	private async Task Paste()
+	{
+		string text = await JSRuntime.InvokeAsync<string>("clipboardPaste");
+		if (text != "")
+		{
+			await TryCreateAnalysisFromText(text); 
+		}
+		else
+		{
+			MessageService.ShowMessageBar(options =>
+				{
+					options.Intent = MessageIntent.Warning;
+					options.Title = "Could not paste from clipboard";
+					options.Timestamp = DateTime.Now;
+					options.Section = IMPORTER_DIALOG_SECTION;
+				});
+		}
+	}
+
+	private async Task AddPasted()
+	{
+		if (FromClipboardAnalysis != null) await Return(FromClipboardAnalysis);
+	}
+
+	// URL Import (not useful)
+	/*
+
+	[Url]
+	string FetchUri { get; set; } = string.Empty;
+
+
+		async Task FetchFromUri()
+			{
+			string file;
+			// Fetch
+			try
+			{
+			file = await Http.GetStringAsync(FetchUri);
+			}
+			catch (UriFormatException)
+			{
+			MessageService.ShowMessageBar(options =>
+				{
+				options.Intent = MessageIntent.Error;
+				options.Title = "Invalid URL format";
+				options.Body = "Please provide a valid URL.";
+				options.Timestamp = DateTime.Now;
+			options.Section = IMPORTER_DIALOG_SECTION;
+		});
+		return;
+		}
+		catch (HttpRequestException e)
+			{
+			MessageService.ShowMessageBar(options =>
+				{
+				options.Intent = MessageIntent.Error;
+				options.Title = "Could not fetch from URL";
+				options.Body = $"A HTTP status code of {e.StatusCode} was returned.";
+				options.Timestamp = DateTime.Now;
+				options.Section = IMPORTER_DIALOG_SECTION;
+		});
+		return;
+		}
+
+		// Process
+		Analysis? analysis = TryCreateAnalysisFromFile(file);
+		if (analysis != null)
+			{
+			Content = analysis;
+			await Dialog.CloseAsync(Content);
+	}
+	}
+
+	*/
+
+	// Processor
+
+	ActionLink<Message> LinkToFormatHelp = new()
+		{
+			Text = "See format specifications",
+			Href = "http://airfoiltools.com/airfoil/index",
+		};
+
+	private async Task TryCreateAnalysisFromText(string text)
 	{
 		PointProfile? pointProfile;
 		string name;
 
 		try
 		{
-			(pointProfile, name) = PointProfile.FromSeligDatFile(file);
+			(pointProfile, name) = PointProfile.FromSeligDatFile(text);
 		}
-		catch (Exception)
+		catch (Exception e)
 		{
-
-			throw;
+			MessageService.ShowMessageBar(options =>
+			{
+				options.Intent = MessageIntent.Error;
+				options.Title = "Could not read airfoil data";
+				options.Body = $"An exception occurred: {e.Message}";
+				options.Timestamp = DateTime.Now;
+				options.Link = LinkToFormatHelp;
+				options.Section = IMPORTER_DIALOG_SECTION;
+			});
+			return;
 		}
 
-		if (pointProfile != null)
-		{
-			return new Analysis(pointProfile, name);
-		}
-		else return null;
+		await Return(new Analysis(pointProfile, name));		
+	}
+
+	private async Task Return(Analysis analysis)
+	{
+		Content = analysis;
+		await Dialog.CloseAsync(Content);
 	}
 }

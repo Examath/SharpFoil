@@ -22,8 +22,11 @@ window.profileCanvas = {
             window.addEventListener('resize', () => { this.draw() });
         }
         else {
-            console.error(`Linking #${this.targetId} failed`);
+            console.error(`JS-PC01 Linking #${this.targetId} failed`);
         }
+
+        // If set had been called before linking
+        if (this.profiles != null) this.draw();
     },
 
     set: function (_profiles) {
@@ -35,10 +38,7 @@ window.profileCanvas = {
         // Scaling tips & tricks: https://joshondesign.com/2023/04/15/canvas_scale_smooth and MDN
 
         // Null colase canvas context
-        if (this.ctx == null) {
-            console.warn(`Canvas #${this.targetId} not linked`);
-            return;
-        }
+        if (this.ctx == null) return;
 
         // Set canvas size and scale
         let bounds = this.container.getBoundingClientRect();
@@ -67,11 +67,12 @@ window.profileCanvas = {
                 let profile = this.profiles[i];
 
                 if (profile.x.length != profile.y.length) {
-                    console.warn('Mismatched X and Y lengths in profile',profile);
+                    console.warn('JS-PC02 Mismatched X and Y lengths in profile',profile);
                     continue;
                 }
 
                 this.ctx.strokeStyle = profile.color;
+                this.ctx.lineWidth = profile.lineWidth;
 
                 if (profile.usePoints) {
                     for (let i = 1; i < profile.x.length; i++) {
@@ -99,7 +100,7 @@ window.profileCanvas = {
             }
         }
         else {
-            console.warn(`Given profiles null`);
+            console.warn(`JS-PC03 Given profiles null`);
         }
     }
 }

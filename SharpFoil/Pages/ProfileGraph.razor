@@ -26,9 +26,15 @@
     {
         List<StyledPointProfile> profiles = new();
 
+        if (other != null) foreach (Analysis analysis in other)
+        {
+            if (analysis == current || !analysis.IsVisible) continue;
+            if (analysis.CurveProfile != null) profiles.Add(new(analysis.CurveProfile.DisplayProfile, analysis.Color));
+        }
+
         if (current != null)
         {
-            if (current.CurveProfile != null) profiles.Add(new(current.CurveProfile.DisplayProfile, current.Color));
+            if (current.CurveProfile != null) profiles.Add(new(current.CurveProfile.DisplayProfile, current.Color, lineWidth: 2));
             profiles.Add(new(current.SourceProfile, current.Color, usePoints: true));
         }
 
