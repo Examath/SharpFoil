@@ -2,7 +2,7 @@
 
 A WebAssembly application hat generates approximated equations of airfoils for use in Autodesk Inventor.
 
-[Try it out now!](https://github.com/Examath/SharpFoil)
+[Try it out now!](https://examath.github.io/SharpFoil/)
 
 This app is designed to meet a unique challenge – parametrically adding airfoils to inventor. The current process of using splines is tedious and difficult to edit, whilst most other software that could do this is currently propietary.
 
